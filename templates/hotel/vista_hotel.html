@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Hotel - La Reliquia</title>
+    <link rel="stylesheet" href="/static/css/vista_hotel.css">
+</head>
+
+<body>
+    <header class="menu-superior">
+        <div class="logo">
+            <img src="/static/iconos/logo.png" alt="Hotel">
+            <h1><span>La Reliquia</span></h1>
+        </div>
+
+        <nav class="menu-opciones">
+            <button onclick="cargarVista('/vista_habitaciones', this)">
+                <img src="/static/iconos/hotel.png" alt="Habitaciones">
+                <span>Hotel</span>
+            </button>
+            <button onclick="cargarVista('/huespedes', this)">
+                <img src="/static/iconos/huespedes.png" alt="Huéspedes">
+                <span>Huéspedes</span>
+            </button>
+            <button onclick="cargarVista('/gestion_habitaciones', this)">
+                <img src="/static/iconos/controlhabitacion.png" alt="habitaciones">
+                <span>Habitaciones</span>
+            </button>
+            <button onclick="cargarVista('/reservas', this)">
+                <img src="/static/iconos/reservas.png" alt="reservas">
+                <span>Reservas</span>
+            </button>
+            <button onclick="cargarVista('/gastos', this)">
+                <img src="/static/iconos/gastos.png" alt="Gastos">
+                <span>Gastos</span>
+            </button>
+            <button onclick="cargarVista('/inventario', this)">
+                <img src="/static/iconos/inventario.png" alt="Inventario">
+                <span>Inventario</span>
+            </button>
+            <button onclick="cargarVista('/arqueo', this)">
+                <img src="/static/iconos/arqueo.png" alt="Arqueo">
+                <span>Arqueo</span>
+            </button>
+        </nav>
+    </header>
+
+    <main class="contenido">
+        <iframe id="visor" src="/vista_habitaciones"></iframe>
+    </main>
+
+    <script src="/static/js/hotel/vista_hotel.js"></script>
+</body>
+
+</html>

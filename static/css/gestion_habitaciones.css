@@ -1,0 +1,227 @@
+:root {
+  --disponible: #2ecc71;
+  --ocupada: #e74c3c;
+  --aseo: #f1c40f;
+  --azul: #3498db;
+  --fondo: #f6f8fa;
+  --texto: #333;
+  --gris: #7f8c8d;
+  --sombra: rgba(0,0,0,0.08);
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  background: var(--fondo);
+  color: var(--texto);
+  margin: 0;
+}
+
+/* === BOTÓN FLOTANTE MEJORADO === */
+.btn-flotante {
+  position: fixed;
+  bottom: 5vh;
+  right: 2vw; /* 🔹 Cambiado: ahora se alinea a la izquierda */
+  width: 58px;
+  height: 58px;
+  background: linear-gradient(145deg, #2ecc71, #27ae60);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  transition: all 0.25s ease-in-out;
+}
+
+.btn-flotante:hover {
+  transform: scale(1.08) translateY(-3px);
+  background: linear-gradient(145deg, #27ae60, #219150);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.btn-flotante:active {
+  transform: scale(0.96);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+/* Mejor contraste si el iframe tiene scroll */
+body {
+  position: relative;
+  min-height: 100vh;
+  overflow-y: auto;
+  background: #f7f9fa;
+}
+
+/* ====== TARJETAS ====== */
+.habitaciones-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+  padding: 2rem;
+}
+
+.habitacion-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px var(--sombra);
+  overflow: hidden;
+  border-left: 6px solid transparent;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.habitacion-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+.estado-disponible { border-left-color: var(--disponible); }
+.estado-ocupada { border-left-color: var(--ocupada); }
+.estado-aseo { border-left-color: var(--aseo); }
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.card-header h2 {
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.badge {
+  padding: 0.3rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+}
+.badge.disponible { background: var(--disponible); }
+.badge.ocupada { background: var(--ocupada); }
+.badge.aseo { background: var(--aseo); }
+
+.card-body {
+  padding: 1rem;
+  font-size: 0.95rem;
+  color: var(--gris);
+  line-height: 1.5;
+}
+
+.card-footer {
+  padding: 1rem;
+  border-top: 1px solid #eee;
+  text-align: right;
+}
+
+.precio {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--azul);
+}
+
+/* ====== MODAL ====== */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,0.4);
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal-contenido {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  width: 380px;
+  max-width: 90%;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-contenido h2 {
+  text-align: center;
+  margin-bottom: 1rem;
+  color: var(--azul);
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+input[type="text"],
+input[type="number"] {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+}
+
+.camas-grid {
+  display: flex;
+  gap: 1rem;
+}
+.camas-grid input {
+  width: 60px;
+}
+
+.botones-modal {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+
+.btn-guardar, .btn-cancelar {
+  flex: 1;
+  margin: 0 4px;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.btn-guardar { background: var(--disponible); color: white; }
+.btn-guardar:hover { background: #239b56; }
+.btn-cancelar { background: var(--ocupada); color: white; }
+.btn-cancelar:hover { background: #c0392b; }
+
+.sin-datos {
+  text-align: center;
+  color: var(--gris);
+  font-style: italic;
+  margin-top: 2rem;
+}
+/* === ALERTAS FLOTANTES === */
+.alerta {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  background: #3498db;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  font-weight: 500;
+  opacity: 1;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  z-index: 2000;
+}
+
+.alerta.success { background: #2ecc71; }
+.alerta.error { background: #e74c3c; }

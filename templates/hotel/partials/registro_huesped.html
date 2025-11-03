@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Registro de Huésped — Hotel</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/hotel/registro_hotel.css') }}">
+</head>
+
+<body>
+  <main class="page">
+    <!-- ENCABEZADO -->
+    <header class="page-header">
+      <h1>Registro de Huésped</h1>
+      <nav class="progress-line">
+        <div class="step" data-step="1">🔍 <span>Búsqueda</span></div>
+        <div class="step" data-step="2">🧍 <span>Datos Huésped</span></div>
+        <div class="step" data-step="3">🏨 <span>Reserva</span></div>
+        <div class="step" data-step="4">💳 <span>Pago</span></div>
+      </nav>
+    </header>
+
+    <!-- SECCIÓN 1: BÚSQUEDA -->
+    <section id="seccion-1" class="seccion">
+      <h2>🔍 Búsqueda de huésped</h2>
+      <div class="form-row">
+        <label for="busqueda-huesped">Documento o nombre</label>
+        <input type="text" id="busqueda-huesped" placeholder="Buscar huésped existente..." />
+        <button id="btn-buscar" class="btn btn-primary">Buscar</button>
+      </div>
+
+      <div id="resultado-busqueda" class="resultado">
+        <!-- Aquí se mostrarán resultados de búsqueda -->
+      </div>
+    </section>
+
+    <!-- SECCIÓN 2: DATOS DEL HUÉSPED -->
+    <section id="seccion-2" class="seccion oculto">
+      <h2>🧍 Datos del huésped</h2>
+      <div class="form-grid">
+        <div class="field">
+          <label for="nombre_huesped">Nombre completo</label>
+          <input type="text" id="nombre_huesped" />
+        </div>
+        <div class="field">
+          <label for="tipo_documento">Tipo de documento</label>
+          <select id="tipo_documento">
+            <option value="">Seleccione...</option>
+            <option value="CC">Cédula</option>
+            <option value="TI">Tarjeta de Identidad</option>
+            <option value="CE">Cédula Extranjera</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="documento">Número de documento</label>
+          <input type="text" id="documento" />
+        </div>
+        <div class="field">
+          <label for="telefono">Teléfono</label>
+          <input type="text" id="telefono" />
+        </div>
+        <div class="field">
+          <label for="correo">Correo electrónico</label>
+          <input type="email" id="correo" />
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 3: DATOS DE LA RESERVA -->
+    <section id="seccion-3" class="seccion oculto">
+      <h2>🏨 Datos de la reserva</h2>
+
+      <div class="row row-compact">
+        <div class="field">
+          <label for="fecha-llegada">Fecha entrada</label>
+          <input type="date" id="fecha-llegada" />
+        </div>
+
+        <div class="field">
+          <label for="fecha-salida">Fecha salida</label>
+          <input type="date" id="fecha-salida" />
+        </div>
+
+        <div class="field">
+          <label for="num-huespedes">N.º huéspedes</label>
+          <input type="number" id="num-huespedes" min="1" value="1" />
+        </div>
+      </div>
+
+      <div class="row row-compact align-center">
+        <div class="field flex-2">
+          <label for="paquete-select">Paquete / Plan</label>
+          <select id="paquete-select">
+            <option value="" data-precio="0">-- Seleccione paquete --</option>
+            {% for p in paquetes %}
+            <option value="{{ p.id }}" data-precio="{{ p.precio }}" data-por-persona="{{ 1 if p.es_por_persona else 0 }}">
+              {{ p.nombre }} — ${{ "{:,.0f}".format(p.precio) }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="descuento">Descuento (%)</label>
+          <input type="number" id="descuento" min="0" max="100" value="0" />
+        </div>
+
+        <div class="field">
+          <label>Valor total</label>
+          <div id="valor-paquete" class="valor">$0</div>
+        </div>
+
+        <div class="field">
+          <label>&nbsp;</label>
+          <button id="btn-agregar-paquete" class="btn btn-primary">Agregar</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="tabla-paquetes">
+          <thead>
+            <tr>
+              <th>Paquete</th>
+              <th>Precio</th>
+              <th>Por persona</th>
+              <th>Personas</th>
+              <th>Desc. %</th>
+              <th>Total</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="5" class="td-right">Subtotal</td>
+              <td id="subtotal-paquetes" class="td-right">$0</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 4: PAGO -->
+    <section id="seccion-4" class="seccion oculto">
+      <h2>💳 Pago y confirmación</h2>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="metodo-pago">Método de pago</label>
+          <select id="metodo-pago">
+            <option value="">Seleccione...</option>
+            <option value="efectivo">Efectivo</option>
+            <option value="tarjeta">Tarjeta</option>
+            <option value="transferencia">Transferencia</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="valor-total">Valor total final</label>
+          <input type="text" id="valor-total" readonly value="$0" />
+        </div>
+
+        <div class="field full">
+          <label for="observaciones">Observaciones</label>
+          <textarea id="observaciones" rows="3"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- BOTONES NAVEGACIÓN -->
+    <footer class="footer-actions">
+      <button id="btn-atras" class="btn btn-secondary">⬅️ Atrás</button>
+      <button id="btn-siguiente" class="btn btn-primary">➡️ Siguiente</button>
+      <button id="btn-guardar" class="btn btn-success oculto">💾 Guardar</button>
+    </footer>
+  </main>
+
+  <!-- JS -->
+  <script src="{{ url_for('static', filename='js/hotel/registro_hotel.js') }}"></script>
+</body>
+</html>

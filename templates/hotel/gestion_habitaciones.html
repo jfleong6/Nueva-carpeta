@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Habitaciones - La Reliquia</title>
+  <link rel="stylesheet" href="/static/css/gestion_habitaciones.css">
+</head>
+
+<body>
+  <div class="dashboard-container">
+
+    <button id="btnAgregar" class="btn-flotante" title="Agregar habitación">
+      <span>＋</span>
+    </button>
+
+
+    <main>
+      <section class="habitaciones-grid">
+        {% for h in habitaciones %}
+        <article
+          class="habitacion-card {% if h.estado == 1 %}estado-disponible{% elif h.estado == 2 %}estado-ocupada{% elif h.estado == 3 %}estado-aseo{% endif %}"
+          data-id="{{ h.numero }}">
+
+          <header class="card-header">
+            <h2>Hab. {{ h.numero }}</h2>
+            {% if h.estado == "1" %}
+            <span class="badge disponible">Disponible</span>
+            {% elif h.estado == "2" %}
+            <span class="badge ocupada">Ocupada</span>
+            {% elif h.estado == "3" %}
+            <span class="badge aseo">En Aseo</span>
+            {% endif %}
+          </header>
+
+          <div class="card-body">
+            <p><strong>🏷️ Tipo:</strong> {{ h.tipo }}</p>
+            <p><strong>👥 Capacidad:</strong> {{ h.capacidad }} personas</p>
+            <p><strong>🛏️ Camas:</strong> {{ h.cama }} dobles, {{ h.camarote }} camarote, {{ h.sencilla }} sencilla</p>
+          </div>
+
+          <footer class="card-footer">
+            <span class="precio">${{ h.precio_noche }} / noche / persona</span>
+          </footer>
+        </article>
+        {% else %}
+        <p class="sin-datos">No hay habitaciones registradas.</p>
+        {% endfor %}
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL -->
+  <div id="modal" class="modal">
+    <div class="modal-contenido">
+      <h2>➕ Nueva Habitación</h2>
+      <form id="formHabitacion">
+        <div class="form-group">
+          <label>Número de habitación</label>
+          <input type="text" name="numero" required placeholder="Ej: 901">
+        </div>
+
+        <div class="form-group">
+          <label>Tipo de habitación</label>
+          <input type="text" name="tipo" required placeholder="Ej: Familiar, Suite, Estándar">
+        </div>
+
+        <div class="form-group">
+          <label>Capacidad (personas)</label>
+          <input type="number" name="capacidad" required placeholder="Ej: 4" min="1">
+        </div>
+
+        <div class="form-group">
+          <label>Cantidad de camas</label>
+          <div class="camas-grid">
+            <div><label>🛏️ Dobles</label><input type="number" name="doble" min="0" value="0"></div>
+            <div><label>🛏️ Sencillas</label><input type="number" name="sencilla" min="0" value="0"></div>
+            <div><label>🛏️ Camarotes</label><input type="number" name="camarote" min="0" value="0"></div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Precio por noche</label>
+          <input type="number" step="1000" name="precio_noche" required placeholder="95000">
+        </div>
+
+        <div class="botones-modal">
+          <button type="submit" class="btn-guardar">💾 Guardar</button>
+          <button type="button" id="btnCerrar" class="btn-cancelar">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/static/js/hotel/gestion_habitaciones.js"></script>
+</body>
+
+</html>

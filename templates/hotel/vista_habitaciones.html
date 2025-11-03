@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Habitaciones del Hotel</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/hotel/habitaciones.css') }}">
+</head>
+<body>
+
+  <!-- 🔹 Navegador superior dinámico -->
+  <nav class="navegador">
+    <ul id="tabs-list">
+      <li class="activo" data-tab="tab-habitaciones">Habitaciones</li>
+    </ul>
+  </nav>
+
+  <!-- 🔹 Contenedor principal -->
+  <div id="tabs-container" class="tabs-container">
+    <div id="tab-habitaciones" class="tab-content activo">
+      <div id="contenedor-habitaciones" class="contenedor-habitaciones">
+        {% for hab in habitaciones %}
+        <div class="habitacion-card {% if hab.estado == '2' %}ocupada{% elif hab.estado == '4' %}reservada{% elif hab.estado == '3' %}aseo{% else %}disponible{% endif %}" 
+             data-numero="{{ hab.numero }}">
+          
+          <div class="imagen-habitacion">
+            <img src="/static/iconos/cama-1.png" alt="Habitación">
+            <h2>{{ hab.numero }}</h2>
+          </div>
+
+          <div class="info-habitacion">
+            <p><img src="/static/iconos/capacidad.png" alt="capacidad"> {{ hab.capacidad }}</p>
+            {% if hab.cama > 0 %}
+            <p><img src="/static/iconos/cama.png" alt="cama"> {{ hab.cama }}</p>
+            {% endif %}
+            {% if hab.sencilla > 0 %}
+            <p><img src="/static/iconos/sencilla.png" alt="sencilla"> {{ hab.sencilla }}</p>
+            {% endif %}
+            {% if hab.camarote > 0 %}
+            <p><img src="/static/iconos/camarote.png" alt="camarote"> {{ hab.camarote }}</p>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/hotel/habitaciones.js') }}"></script>
+</body>
+</html>
