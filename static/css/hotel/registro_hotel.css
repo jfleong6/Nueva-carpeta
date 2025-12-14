@@ -47,7 +47,7 @@ body {
    =============================== */
 .page-header {
   display: flex;
-  flex-direction: column;
+  /* flex-direction: column; */
   align-items: center;
   margin-bottom: 1.5rem;
   text-align: center;
@@ -140,6 +140,9 @@ h2 {
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
 }
+.form-column{
+  display: flex;
+}
 
 .field {
   display: flex;
@@ -155,7 +158,7 @@ h2 {
 .field input,
 .field select,
 .field textarea {
-  width: 100%;
+  width: 18vw;
   padding: 0.6rem 0.75rem;
   border-radius: var(--radius);
   border: 1px solid var(--color-border);
@@ -255,6 +258,9 @@ tbody tr:nth-child(even) {
 }
 
 .btn-primary {
+    padding: 0.6rem 0.75rem;
+  display: flex;
+  align-self: flex-end;
   background: var(--color-primary);
   color: white;
 }
