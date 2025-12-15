@@ -1,133 +1,321 @@
-// === REFERENCIAS ===
-const form = document.getElementById("formHabitacion");
+/* ==================================
+   1. GESTIÓN DEL MODAL NUEVO / EDITAR
+   ================================== */
 const modal = document.getElementById("modal");
-const btnAgregar = document.getElementById("btnAgregar");
+const form = document.getElementById("formHabitacion");
+const btnAgregar = document.getElementById("btnAgregar"); // Ahora está en el Header
 const btnCerrar = document.getElementById("btnCerrar");
-const contenedor = document.querySelector(".habitaciones-grid");
 
-// === FUNCIONES DE INTERFAZ ===
+// ====== MAPEO DE ESTADOS ======
+// Este objeto centraliza toda la información visual y textual de cada estado.
+const MAPEO_ESTADOS = {
+    '0': { 
+        clase: 'mant', 
+        texto: 'Bloqueada', 
+        color: '#95a5a6', 
+        acciones: (id) => `
+            <button class="btn-icon" onclick="desbloquear('${id}')" title="Desbloquear">🔓</button>
+        ` 
+    },
+    '1': { 
+        clase: 'disponible', 
+        texto: 'Disponible', 
+        color: '#2ecc71',
+        acciones: (id) => `
+            <button class="btn-icon btn-danger-text" onclick="abrirModalBloqueo('${id}')" title="Bloquear">🚫</button>
+        ` 
+    },
+    '2': { 
+        clase: 'ocupada', 
+        texto: 'Ocupada', 
+        color: '#e74c3c',
+        acciones: (id) => `
+            <button class="btn-icon btn-danger-text" onclick="abrirModalBloqueo('${id}')" title="Bloquear">🚫</button>
+        `
+    },
+    '3': { 
+        clase: 'aseo', 
+        texto: 'Limpieza', 
+        color: '#f1c40f',
+        acciones: (id) => `
+            <button class="btn-icon btn-limpiar" onclick="marcarLimpia('${id}')" title="Marcar Limpia">🧹</button>
+            <button class="btn-icon btn-danger-text" onclick="abrirModalBloqueo('${id}')" title="Bloquear">🚫</button>
+        ` 
+    },
+    // Si agregas '4' = Reservada, solo añades la clave aquí:
+    // '4': { clase: 'reservada', texto: 'Reservada', color: '#3498db', acciones: (id) => '...' }
+};
+// =============================
 
-// Mostrar modal
+// Abrir modal
 btnAgregar.addEventListener("click", () => {
-  modal.style.display = "flex";
+    form.reset();
+    modal.style.display = "flex";
 });
 
 // Cerrar modal
-btnCerrar.addEventListener("click", cerrarModal);
-modal.addEventListener("click", (e) => {
-  if (e.target === modal) cerrarModal();
-});
-
 function cerrarModal() {
-  modal.style.display = "none";
-  form.reset();
+    modal.style.display = "none";
 }
+btnCerrar.addEventListener("click", cerrarModal);
 
-// === FUNCIÓN PARA CREAR TARJETA ===
-function crearTarjeta(h) {
-  const card = document.createElement("article");
-  card.classList.add("habitacion-card");
-  card.dataset.id = h.numero;
-
-  // Asignar clase según estado
-  if (h.estado === 1) card.classList.add("estado-disponible");
-  if (h.estado === 2) card.classList.add("estado-ocupada");
-  if (h.estado === 3) card.classList.add("estado-aseo");
-
-  // Determinar texto del estado
-  const estadoTexto = 
-    h.estado === 1 ? "Disponible" : 
-    h.estado === 2 ? "Ocupada" : "En Aseo";
-
-  // Construir el contenido HTML
-  card.innerHTML = `
-    <header class="card-header">
-      <h2>Hab. ${h.numero}</h2>
-      <span class="badge ${
-        h.estado === 1 ? "disponible" : h.estado === 2 ? "ocupada" : "aseo"
-      }">${estadoTexto}</span>
-    </header>
-    <div class="card-body">
-      <p><strong>🏷️ Tipo:</strong> ${h.tipo}</p>
-      <p><strong>👥 Capacidad:</strong> ${h.capacidad} personas</p>
-      <p><strong>🛏️ Camas:</strong> ${h.cama} dobles, ${h.camarote} camarote, ${h.sencilla} sencilla</p>
-    </div>
-    <footer class="card-footer">
-      <span class="precio">$${h.precio_noche} / noche / persona</span>
-    </footer>
-  `;
-
-  return card;
-}
-
-// === FUNCIÓN PARA INSERTAR ORDENADO POR NÚMERO ===
-function insertarEnOrden(nuevaCard) {
-  const nuevasId = parseInt(nuevaCard.dataset.id);
-  const habitaciones = [...contenedor.querySelectorAll(".habitacion-card")];
-
-  let insertado = false;
-  for (const card of habitaciones) {
-    const idExistente = parseInt(card.dataset.id);
-    if (nuevasId < idExistente) {
-      contenedor.insertBefore(nuevaCard, card);
-      insertado = true;
-      break;
-    }
-  }
-
-  if (!insertado) contenedor.appendChild(nuevaCard);
-}
-
-// === GUARDAR HABITACIÓN ===
+// ENVIAR FORMULARIO (AGREGAR)
 form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  // Recolectar datos
-  const datos = {
-    numero: form.numero.value.trim(),
-    tipo: form.tipo.value.trim(),
-    capacidad: parseInt(form.capacidad.value),
-    cama: parseInt(form.doble.value),
-    sencilla: parseInt(form.sencilla.value),
-    camarote: parseInt(form.camarote.value),
-    precio_noche: parseFloat(form.precio_noche.value),
-    estado: 1, // Por defecto “Disponible”
-  };
+    const datos = {
+        numero: form.numero.value.trim(),
+        tipo: form.tipo.value.trim(),
+        capacidad: parseInt(form.capacidad.value),
+        cama: parseInt(form.doble.value),
+        sencilla: parseInt(form.sencilla.value),
+        camarote: parseInt(form.camarote.value),
+        precio_noche: parseFloat(form.precio_noche.value),
+        estado: 1
+    };
 
-  try {
-    const respuesta = await fetch("/api/habitaciones/agregar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(datos),
-    });
+    try {
+        const respuesta = await fetch("/api/habitaciones/agregar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(datos),
+        });
 
-    const data = await respuesta.json();
+        const data = await respuesta.json();
+        if (!respuesta.ok) throw new Error(data.error || "Error al guardar");
 
-    if (!respuesta.ok) throw new Error(data.error || "No se pudo guardar");
+        alert("✅ " + data.mensaje);
+        cerrarModal();
+        
+        // Agregar visualmente a la tabla (sin recargar)
+        insertarFilaTabla(datos);
+        console.log("Vamos bien")
 
-    // Mostrar notificación visual
-    mostrarAlerta("✅ " + data.mensaje, "success");
-
-    // Cerrar modal
-    cerrarModal();
-
-    // Crear y añadir tarjeta visualmente
-    const nuevaCard = crearTarjeta(datos);
-    insertarEnOrden(nuevaCard);
-  } catch (err) {
-    mostrarAlerta("❌ Error: " + err.message, "error");
-  }
+    } catch (err) {
+        alert("❌ Error: " + err.message);
+    }
 });
 
-// === ALERTAS TEMPORALES ===
-function mostrarAlerta(mensaje, tipo = "info") {
-  let alerta = document.createElement("div");
-  alerta.className = `alerta ${tipo}`;
-  alerta.textContent = mensaje;
-  document.body.appendChild(alerta);
+/* ==================================
+   2. FUNCIONES DE TABLA (FILTROS)
+   ================================== */
 
-  setTimeout(() => {
-    alerta.style.opacity = "0";
-    setTimeout(() => alerta.remove(), 400);
-  }, 2500);
+function filtrarTabla() {
+    const texto = document.getElementById('buscador').value.toLowerCase();
+    const filas = document.querySelectorAll('.fila-habitacion');
+
+    filas.forEach(fila => {
+        const numero = fila.querySelector('.col-numero').textContent.toLowerCase();
+        fila.style.display = numero.includes(texto) ? '' : 'none';
+    });
+}
+
+function filtrarEstado(estado) {
+    document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+
+    const filas = document.querySelectorAll('.fila-habitacion');
+    filas.forEach(fila => {
+        if(estado === 'todos' || fila.dataset.estado === estado) {
+            fila.style.display = '';
+        } else {
+            fila.style.display = 'none';
+        }
+    });
+}
+
+/* ==================================
+   3. ACCIONES: BLOQUEO Y LIMPIEZA
+   ================================== */
+
+let habSeleccionada = null;
+
+function abrirModalBloqueo(numero) {
+    habSeleccionada = numero;
+    document.getElementById('modalBloqueo').style.display = 'flex';
+}
+
+function cerrarModalBloqueo() {
+    document.getElementById('modalBloqueo').style.display = 'none';
+}
+
+async function confirmarBloqueo() {
+    const motivo = document.getElementById('motivoBloqueo').value;
+    
+    // Validar que haya motivo
+    if(!motivo) return alert("Por favor selecciona un motivo");
+
+    const datos = {
+        numero: habSeleccionada, // Ej: "101"
+        motivo: motivo,
+        usuario_id: 1 // TODO: Cambiar por el ID del usuario logueado en sesión
+    };
+
+    try {
+        const respuesta = await fetch('/api/bloquear', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datos)
+        });
+
+        const data = await respuesta.json();
+
+        if (!respuesta.ok) {
+            throw new Error(data.error || "Error al bloquear");
+        }
+
+        alert(`✅ ${data.mensaje}`);
+        cerrarModalBloqueo();
+        actualizarFilaEstado(habSeleccionada,"0")
+        
+
+    } catch (err) {
+        alert(`❌ Error: ${err.message}`);
+    }
+}
+
+// En gestion_habitaciones.js
+
+async function desbloquear(numeroHabitacion, habitacion) {
+    if(!confirm(`¿Seguro que quieres habilitar la habitación ${habitacion}?`)) return;
+
+    try {
+        const respuesta = await fetch('/api/desbloquear', { // <-- Nueva ruta
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ numero: numeroHabitacion }) // Solo enviamos el número
+        });
+
+        const data = await respuesta.json();
+
+        if (respuesta.ok) {
+            alert('✅ Habitación '+habitacion+' desbloqueada.');
+            // ACTUALIZACIÓN LOCAL SIN RECARGAR
+            actualizarFilaEstado(numeroHabitacion, '1'); // Estado '1' es Disponible
+        } else {
+            // Manejar errores como "No había bloqueo activo"
+            alert("❌ Error: " + data.error);
+        }
+
+    } catch (err) {
+        alert("❌ Error de conexión: " + err.message);
+    }
+}
+
+function marcarLimpia(numero) {
+    if(confirm(`¿La habitación ${numero} ya está limpia y lista?`)) {
+        // Fetch para actualizar estado a '1'
+        alert(`Habitación ${numero} habilitada 🟢`);
+        location.reload();
+    }
+}
+
+
+function crearNewFilaTabla(h) {
+    const tr = document.createElement('tr');
+    tr.className = 'fila-habitacion';
+    tr.dataset.estado = h.estado;
+    tr.dataset.id = h.numero;
+
+    // Generamos el HTML de las camas dinámicamente
+    let htmlCamas = '<div class="camas-wrapper">';
+    if(h.cama > 0)     htmlCamas += `<div class="item-cama"><img src="/static/iconos/cama.png"> <span>×${h.cama}</span></div>`;
+    if(h.sencilla > 0) htmlCamas += `<div class="item-cama"><img src="/static/iconos/sencilla.png"> <span>×${h.sencilla}</span></div>`;
+    if(h.camarote > 0) htmlCamas += `<div class="item-cama"><img src="/static/iconos/camarote.png"> <span>×${h.camarote}</span></div>`;
+    htmlCamas += '</div>';
+
+    tr.innerHTML = `
+        <td class="col-numero"><strong>${h.numero}</strong></td>
+        <td>
+            <div class="dato-tipo">${h.tipo}</div>
+            <span class="dato-capacidad">👤 ${h.capacidad} pers.</span>
+        </td>
+        <td class="col-camas">
+           ${htmlCamas}
+        </td>
+        <td class="col-precio">$ ${h.precio_noche}</td>
+        <td><span class="badge disponible">Disponible</span></td>
+        <td class="text-right actions-cell">
+            <button class="btn-icon btn-danger-text" onclick="abrirModalBloqueo('${h.id}')">🚫</button>
+            <button class="btn-icon">✏️</button>
+            <button class="btn-icon">👁️</button>
+        </td>
+    `;
+    
+    return tr
+}
+function insertarFilaTabla(datos) {
+    // 1. Crear el elemento de la fila
+    const nuevaFila = crearNewFilaTabla(datos); // Asumiendo que esta función existe y crea el <tr>
+
+    const tablaBody = document.getElementById('tablaBody');
+    const filasExistentes = tablaBody.querySelectorAll('tr.fila-habitacion');
+    
+    const nuevoNumero = datos.numero; // Número de la nueva habitación (ej: "607")
+    let insertado = false;
+
+    // 2. Iterar sobre las filas existentes para encontrar el punto de inserción
+    for (const fila of filasExistentes) {
+        const numeroExistente = fila.querySelector('.col-numero strong').textContent;
+
+        // Comparamos alfabéticamente el nuevo número con los existentes
+        if (nuevoNumero < numeroExistente) {
+            // Encontró una fila con un número mayor: insertamos antes de ella
+            tablaBody.insertBefore(nuevaFila, fila);
+            insertado = true;
+            break;
+        }
+    }
+
+    // 3. Si no se insertó (es el número más grande), se añade al final
+    if (!insertado) {
+        tablaBody.appendChild(nuevaFila);
+    }
+    
+    // 4. Aplicar el efecto de resaltado (ver paso 2)
+    aplicarResaltado(nuevaFila);
+}
+function aplicarResaltado(fila) {
+    // 1. Aplicar la clase que tiene el color de fondo amarillo
+    fila.classList.add('highlight-new');
+    
+    // 2. Remover la clase después de un tiempo (1500 milisegundos = 1.5 segundos)
+    setTimeout(() => {
+        // La clase se remueve, y la propiedad transition de CSS hace que el color vuelva al normal lentamente.
+        fila.classList.remove('highlight-new');
+    }, 1500); 
+}
+function actualizarFilaEstado(numeroHab, nuevoEstado) {
+    // 1. Obtener la configuración del estado del objeto de mapeo
+    const config = MAPEO_ESTADOS[nuevoEstado];
+    if (!config) return; // Si el estado no existe, salimos
+
+    // 2. Localizar la fila y actualizar el data-estado
+    const fila = document.querySelector(`.fila-habitacion[data-id="${numeroHab}"]`);
+    if (!fila) return;
+
+    fila.dataset.estado = nuevoEstado;
+    
+    // 3. Actualizar el Badge de Estado visible
+    const badgeCell = fila.querySelector('td:nth-child(5)'); 
+    
+    // Usamos la información del objeto de mapeo directamente
+    const badgeHtml = `<span class="badge ${config.clase}">${config.texto}</span>`;
+
+    badgeCell.innerHTML = badgeHtml;
+
+    // 4. Rerenderizar los Botones de Acción (Remplazar Bloquear por Desbloquear, etc.)
+    const actionsCell = fila.querySelector('.actions-cell');
+    
+    // Obtenemos el HTML de las acciones específicas del estado
+    let newActionsHtml = config.acciones(numeroHab);
+
+    // Añadimos las acciones base (Editar y Ver Detalle) que van SIEMPRE al final
+    newActionsHtml += `
+        <button class="btn-icon" onclick="editarHabitacion('${numeroHab}')" title="Editar">✏️</button>
+        <button class="btn-icon" onclick="verDetalle('${numeroHab}')" title="Ver Detalle">👁️</button>
+    `;
+    
+    // Insertar el nuevo HTML de Acciones
+    actionsCell.innerHTML = newActionsHtml;
 }

@@ -4,92 +4,170 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestión de Habitaciones - La Reliquia</title>
+  <title>Gestión de Habitaciones</title>
   <link rel="stylesheet" href="/static/css/gestion_habitaciones.css">
 </head>
 
 <body>
+
+  <header class="sticky-header">
+    <div class="header-content">
+      <div class="search-box">
+        <span class="icon">🔍</span>
+        <input type="text" id="buscador" placeholder="Buscar habitación..." onkeyup="filtrarTabla()">
+      </div>
+
+      <div class="filtros-grupo">
+        <button class="filter-pill active" onclick="filtrarEstado('todos')">Todas</button>
+        <button class="filter-pill" onclick="filtrarEstado('1')">🟢 Disp.</button>
+        <button class="filter-pill" onclick="filtrarEstado('3')">🧹 Aseo</button>
+        <button class="filter-pill" onclick="filtrarEstado('2')">🔴 Ocup.</button>
+        <button class="filter-pill" onclick="filtrarEstado('0')">🚫 Bloq.</button>
+      </div>
+
+      <button id="btnAgregar" class="btn-primary-header">
+        <span>＋</span> Nueva Habitación
+      </button>
+    </div>
+  </header>
+
   <div class="dashboard-container">
-
-    <button id="btnAgregar" class="btn-flotante" title="Agregar habitación">
-      <span>＋</span>
-    </button>
-
-
-    <main>
-      <section class="habitaciones-grid">
+    <table class="tabla-gestion">
+      <thead>
+        <tr>
+          <th>Habitación</th>
+          <th>Tipo / Capacidad</th>
+          <th>Camas</th>
+          <th>Precio</th>
+          <th>Estado</th>
+          <th class="text-right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tablaBody">
         {% for h in habitaciones %}
-        <article
-          class="habitacion-card {% if h.estado == 1 %}estado-disponible{% elif h.estado == 2 %}estado-ocupada{% elif h.estado == 3 %}estado-aseo{% endif %}"
-          data-id="{{ h.numero }}">
+        <tr class="fila-habitacion" data-estado="{{ h.estado }}" data-id="{{ h.id }}">
+          <td class="col-numero"><strong>{{ h.numero }}</strong></td>
 
-          <header class="card-header">
-            <h2>Hab. {{ h.numero }}</h2>
-            {% if h.estado == "1" %}
-            <span class="badge disponible">Disponible</span>
-            {% elif h.estado == "2" %}
-            <span class="badge ocupada">Ocupada</span>
-            {% elif h.estado == "3" %}
-            <span class="badge aseo">En Aseo</span>
+          <td>
+            <div class="dato-tipo">{{ h.tipo }}</div>
+            <span class="dato-capacidad">👤 {{ h.capacidad }} pers.</span>
+          </td>
+
+          <td class="col-camas">
+            <div class="camas-wrapper">
+              {% if h.cama > 0 %}
+              <div class="item-cama" title="Cama Doble">
+                <img src="/static/iconos/cama.png" alt="Doble">
+                <span>×{{ h.cama }}</span>
+              </div>
+              {% endif %}
+
+              {% if h.sencilla > 0 %}
+              <div class="item-cama" title="Cama Sencilla">
+                <img src="/static/iconos/sencilla.png" alt="Sencilla">
+                <span>×{{ h.sencilla }}</span>
+              </div>
+              {% endif %}
+
+              {% if h.camarote > 0 %}
+              <div class="item-cama" title="Camarote">
+                <img src="/static/iconos/camarote.png" alt="Camarote">
+                <span>×{{ h.camarote }}</span>
+              </div>
+              {% endif %}
+            </div>
+          </td>
+
+          <td class="col-precio">$ {{ "{:,.0f}".format(h.precio_noche) }}</td>
+
+          <td>
+            {% if h.estado == '1' %} <span class="badge disponible">Disponible</span>
+            {% elif h.estado == '3' %} <span class="badge aseo">Limpieza</span>
+            {% elif h.estado == '0' %} <span class="badge mant">Bloqueada</span>
+            {% elif h.estado == '2' %} <span class="badge ocupada">Ocupada</span>
             {% endif %}
-          </header>
+          </td>
 
-          <div class="card-body">
-            <p><strong>🏷️ Tipo:</strong> {{ h.tipo }}</p>
-            <p><strong>👥 Capacidad:</strong> {{ h.capacidad }} personas</p>
-            <p><strong>🛏️ Camas:</strong> {{ h.cama }} dobles, {{ h.camarote }} camarote, {{ h.sencilla }} sencilla</p>
-          </div>
+          <td class="text-right actions-cell">
+            {% if h.estado == '3' %}
+            <button class="btn-icon btn-limpiar" onclick="marcarLimpia('{{ h.numero }}')"
+              title="Marcar Limpia">🧹</button>
+            {% endif %}
 
-          <footer class="card-footer">
-            <span class="precio">${{ h.precio_noche }} / noche / persona</span>
-          </footer>
-        </article>
-        {% else %}
-        <p class="sin-datos">No hay habitaciones registradas.</p>
+            {% if h.estado == '0' %}
+            <button class="btn-icon" onclick="desbloquear('{{ h.id }}', '{{h.numero}}')" title="Desbloquear">🔓</button>
+            {% else %}
+            <button class="btn-icon btn-danger-text" onclick="abrirModalBloqueo('{{ h.id }}')"
+              title="Bloquear">🚫</button>
+            {% endif %}
+
+            <button class="btn-icon" onclick="editarHabitacion('{{ h.numero }}')" title="Editar">✏️</button>
+            <button class="btn-icon" onclick="verDetalle('{{ h.numero }}')" title="Ver Detalle">👁️</button>
+          </td>
+        </tr>
         {% endfor %}
-      </section>
-    </main>
+      </tbody>
+    </table>
   </div>
 
-  <!-- MODAL -->
-  <div id="modal" class="modal">
+  <div id="modal" class="modal-overlay">
     <div class="modal-contenido">
-      <h2>➕ Nueva Habitación</h2>
+      <div class="modal-header">
+        <h2>Nueva Habitación</h2>
+        <span id="btnCerrar" class="cerrar-modal">&times;</span>
+      </div>
+
       <form id="formHabitacion">
         <div class="form-group">
-          <label>Número de habitación</label>
+          <label>Número</label>
           <input type="text" name="numero" required placeholder="Ej: 901">
         </div>
-
-        <div class="form-group">
-          <label>Tipo de habitación</label>
-          <input type="text" name="tipo" required placeholder="Ej: Familiar, Suite, Estándar">
-        </div>
-
-        <div class="form-group">
-          <label>Capacidad (personas)</label>
-          <input type="number" name="capacidad" required placeholder="Ej: 4" min="1">
-        </div>
-
-        <div class="form-group">
-          <label>Cantidad de camas</label>
-          <div class="camas-grid">
-            <div><label>🛏️ Dobles</label><input type="number" name="doble" min="0" value="0"></div>
-            <div><label>🛏️ Sencillas</label><input type="number" name="sencilla" min="0" value="0"></div>
-            <div><label>🛏️ Camarotes</label><input type="number" name="camarote" min="0" value="0"></div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Tipo</label>
+            <input type="text" name="tipo" required placeholder="Ej: Suite">
+          </div>
+          <div class="form-group">
+            <label>Capacidad</label>
+            <input type="number" name="capacidad" required min="1">
           </div>
         </div>
 
         <div class="form-group">
-          <label>Precio por noche</label>
-          <input type="number" step="1000" name="precio_noche" required placeholder="95000">
+          <label>Configuración de Camas</label>
+          <div class="camas-grid">
+            <div><label>👑 Dobles</label><input type="number" name="doble" value="0"></div>
+            <div><label>🛏️ Senc.</label><input type="number" name="sencilla" value="0"></div>
+            <div><label>🪜 Camar.</label><input type="number" name="camarote" value="0"></div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Precio Noche</label>
+          <input type="number" step="1000" name="precio_noche" required>
         </div>
 
         <div class="botones-modal">
-          <button type="submit" class="btn-guardar">💾 Guardar</button>
-          <button type="button" id="btnCerrar" class="btn-cancelar">Cancelar</button>
+          <button type="button" class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
+          <button type="submit" class="btn-guardar">Guardar</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <div id="modalBloqueo" class="modal-overlay">
+    <div class="modal-contenido small">
+      <h3>🚫 Bloquear Habitación</h3>
+      <p>Selecciona el motivo del bloqueo:</p>
+      <select id="motivoBloqueo" class="input-full">
+        <option>Mantenimiento General</option>
+        <option>Reparación Eléctrica</option>
+        <option>Pintura</option>
+      </select>
+      <div class="botones-modal">
+        <button class="btn-cancelar" onclick="cerrarModalBloqueo()">Cancelar</button>
+        <button class="btn-guardar btn-danger-bg" onclick="confirmarBloqueo()">Bloquear</button>
+      </div>
     </div>
   </div>
 
