@@ -66,6 +66,7 @@ def agregarHabitacion():
         datos = request.get_json(force=True)
 
         respuesta = agregar_habitacion(datos=datos)
+        print(respuesta)
         # Convertimos el string en booleano real por si acaso
         ok = respuesta.get('ok', "")
         # print(ok)
@@ -78,3 +79,40 @@ def agregarHabitacion():
         print(f"[ERROR] en endpoint agregarHabitacion: {e}")
         return jsonify({"error": str(e)}), 500
 
+
+# RUTA PARA BLOQUEAR
+@hotel_bp.route("/api/bloquear", methods=["POST"])
+def bloquearHabitacionRoute():
+    try:
+        # force=True evita errores si el header no es application/json
+        datos = request.get_json(force=True) 
+        
+        # Llamamos a tu lógica estilo "ConexionBase"
+        respuesta = bloquear_habitacion(datos)
+        
+        if respuesta.get("ok"):
+            return jsonify(respuesta), 200
+        else:
+            return jsonify(respuesta), 400
+            
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+# RUTA PARA DESBLOQUEAR (Para el botón del candado abierto 🔓)
+@hotel_bp.route("/api/desbloquear", methods=["POST"])
+def desbloquearHabitacionRoute():
+    try:
+        datos = request.get_json(force=True)
+        numero = datos.get("numero")
+        
+        respuesta = desbloquear_habitacion(numero)
+        
+        if respuesta.get("ok"):
+            return jsonify(respuesta), 200
+        else:
+            # Usamos 400 si el problema es lógico (no estaba bloqueada)
+            return jsonify(respuesta), 400 
+            
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500

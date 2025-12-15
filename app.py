@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, render_template
 from flask_cors import CORS
-from models.hotel import *  # Asegúrate de que esté importando bien
+from routes.hotel import *  # Asegúrate de que esté importando bien
 
 def create_app():
     app = Flask(__name__)
