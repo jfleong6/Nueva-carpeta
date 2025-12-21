@@ -90,7 +90,7 @@
 
           <td class="text-right actions-cell">
             {% if h.estado == '3' %}
-            <button class="btn-icon btn-limpiar" onclick="marcarLimpia('{{ h.numero }}')"
+            <button class="btn-icon btn-limpiar" onclick="marcarLimpia('{{ h.id}}', '{{ h.numero }}')"
               title="Marcar Limpia">🧹</button>
             {% endif %}
 
@@ -101,8 +101,9 @@
               title="Bloquear">🚫</button>
             {% endif %}
 
-            <button class="btn-icon" onclick="editarHabitacion('{{ h.numero }}')" title="Editar">✏️</button>
-            <button class="btn-icon" onclick="verDetalle('{{ h.numero }}')" title="Ver Detalle">👁️</button>
+            <!-- <button class="btn-icon" onclick="editarHabitacion('{{ h.numero }}')" title="Editar">✏️</button> -->
+
+            <button class="btn-icon" onclick="verDetalle('{{ h.id }}')" title="Ver Detalle">👁️</button>
           </td>
         </tr>
         {% endfor %}
@@ -167,6 +168,38 @@
       <div class="botones-modal">
         <button class="btn-cancelar" onclick="cerrarModalBloqueo()">Cancelar</button>
         <button class="btn-guardar btn-danger-bg" onclick="confirmarBloqueo()">Bloquear</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-detalle-overlay" class="modal-overlay">
+    <div id="modal-detalle-habitacion" class="modal-contenido large">
+      <div class="modal-header-detalle">
+        <h2>Habitación: <span id="detalle-numero"></span> <span id="detalle-estado-badge"></span></h2>
+        <button class="cerrar-modal-btn" onclick="cerrarModalDetalle()">
+          <span class="cerrar-modal">&times;</span>
+        </button>
+      </div>
+
+      <div class="detalle-grid-2-cols">
+
+        <div id="detalle-info-basica" class="detalle-card">
+        </div>
+
+        <div class="detalle-historial-wrapper">
+          <h3>🧹 Historial de Aseo</h3>
+          <table class="tabla-historial">
+            <thead>
+              <tr>
+                <th>Fecha/Hora</th>
+                <th>Realizado por</th>
+              </tr>
+            </thead>
+            <tbody id="detalle-historial-body">
+            </tbody>
+          </table>
+        </div>
+
       </div>
     </div>
   </div>

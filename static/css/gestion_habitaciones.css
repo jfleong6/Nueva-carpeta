@@ -204,3 +204,65 @@ input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius
     /* El color de fondo normal de la fila */
     background-color: #ffffff; 
 }
+
+
+/* --- NUEVOS ESTILOS PARA LA DISTRIBUCIÓN EN 2 COLUMNAS --- */
+
+/* Contenedor del Título */
+.modal-header-detalle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* Botón de cierre en la esquina superior derecha (X) */
+.cerrar-modal-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: var(--gray);
+    transition: color 0.2s;
+    padding: 5px; /* Para que sea más fácil hacer clic */
+}
+.cerrar-modal-btn:hover {
+    color: var(--red);
+}
+
+/* EL GRID DE DOS COLUMNAS */
+.detalle-grid-2-cols {
+    display: grid;
+    grid-template-columns: 4fr 4fr; /* Columna izquierda (Info) más estrecha que la derecha (Historial) */
+    gap: 30px;
+}
+
+/* Estilo para las tarjetas de Información Principal (COLUMNA IZQUIERDA) */
+.detalle-card {
+    /* Quitamos el grid de 3 columnas de antes y volvemos a formato de lista/card */
+    display: block; 
+    background: #ffffff;
+    border: 1px solid #e9ecef; 
+    padding: 15px;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Sombra muy ligera para separarlo */
+}
+
+/* Estilo para el historial (COLUMNA DERECHA) */
+.detalle-historial-wrapper h3 {
+    margin-top: 0;
+    font-size: 1.1rem;
+    color: #495057;
+}
+
+/* Estilo de la tabla (Asegurando solo las columnas necesarias) */
+.tabla-historial th:nth-child(2),
+.tabla-historial td:nth-child(2) {
+    /* Aseguramos que solo estas dos columnas sean visibles/estilizadas */
+    width: 40%; 
+}
+/* Ocultamos las columnas que ya no queremos (si existían en la tabla)
+   Si la tabla solo renderiza 3 columnas, esto no es necesario.
+*/

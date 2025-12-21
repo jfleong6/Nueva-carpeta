@@ -1,6 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify
 from models.habitacion import *
-from db.conexion_base import ConexionBase
 
 
 hotel_bp = Blueprint('hotel', __name__)
@@ -116,3 +115,57 @@ def desbloquearHabitacionRoute():
             
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
+    
+
+@hotel_bp.route('/api/habitaciones/detalle/<string:numero>', methods=['GET'])
+def get_detalle_habitacion(numero):
+    resultado = obtener_detalle_habitacion(numero)
+    
+    if resultado["ok"]:
+        return jsonify(resultado["data"]), 200
+    else:
+        return jsonify({"error": resultado["error"]}), 404
+
+
+@hotel_bp.route('/api/marcar_limpia', methods=['POST'])
+def api_marcar_limpia():
+    data = request.get_json()
+    
+    numero = data.get('numero')
+    id_hab = data.get('id_hab')
+    
+    # CRÍTICO: Aquí debes obtener el ID del usuario logueado de tu sistema de sesión.
+    # Por ahora, usamos un ID fijo para que el Trigger funcione en la auditoría.
+    usuario_id = data.get('usuario')
+    
+    if not numero:
+        return jsonify({"ok": False, "error": "Número de habitación requerido"}), 400
+
+    resultado = marcar_disponible(id_hab,numero, usuario_id)
+
+    if resultado["ok"]:
+        return jsonify({"ok": True, "mensaje": resultado["mensaje"]}), 200
+    else:
+        # Devolvemos el error específico para que el Front-end lo muestre
+        return jsonify({"ok": False, "error": resultado["mensaje"]}), 500
+    
+@hotel_bp.route('/api/marcar_aseo', methods=['POST'])
+def api_marcar_aseo():
+    data = request.get_json()
+    
+    numero = data.get('numero')
+    
+    # CRÍTICO: Aquí debes obtener el ID del usuario logueado de tu sistema de sesión.
+    # Usamos un ID fijo '1' como valor de prueba para la auditoría.
+    usuario_id = 1 
+    
+    if not numero:
+        return jsonify({"ok": False, "error": "Número de habitación requerido"}), 400
+
+    resultado = marcar_aseo(numero, usuario_id)
+
+    if resultado["ok"]:
+        return jsonify({"ok": True, "mensaje": resultado["mensaje"]}), 200
+    else:
+        # Devolver el error específico para que el Front-end lo muestre
+        return jsonify({"ok": False, "error": resultado["mensaje"]}), 500

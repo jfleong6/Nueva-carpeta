@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test API: Marcar Aseo Dinámico</title>
+    <style>
+        body { font-family: sans-serif; padding: 50px; text-align: center; background: #f4f6f9; }
+        .container { max-width: 400px; margin: 0 auto; padding: 30px; background: white; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        #hab-input { padding: 10px; margin-bottom: 15px; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px 20px; background: #003366; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #002244; }
+        #resultado { margin-top: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 4px; font-weight: 600; text-align: left; }
+        .success { border-color: #2ecc71; color: #2ecc71; background: #e8f8f5; }
+        .error { border-color: #e74c3c; color: #e74c3c; background: #fdedec; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Prueba de API: 🧹 Iniciar Aseo</h1>
+        <p>Introduce el **Número de Habitación** (ej: 101) que quieras poner en Limpieza (estado '3'):</p>
+
+        <input id="hab-input" type="text" placeholder="Ej: 101">
+        
+        <button onclick="probarMarcarAseo()">Ejecutar Test de Aseo</button>
+
+        <div id="resultado">Esperando entrada...</div>
+        <p style="margin-top: 30px; font-size: 0.8rem; color: #777;">
+            Asegúrate de que tu aplicación Flask está corriendo en <code>http://localhost:5000</code>.
+        </p>
+    </div>
+
+    <script>
+        const API_URL = "http://192.168.1.4:5000/api/marcar_aseo"; 
+        
+        /**
+         * Llama a la API para cambiar el estado de la habitación a Limpieza (3).
+         */
+        async function probarMarcarAseo() {
+            // 1. LECTURA DINÁMICA DEL VALOR JUSTO ANTES DE ENVIAR
+            const numeroHabitacion = document.getElementById("hab-input").value.trim();
+            const resultadoDiv = document.getElementById('resultado');
+
+            if (!numeroHabitacion) {
+                resultadoDiv.className = 'error';
+                resultadoDiv.textContent = '❌ ERROR: Por favor, introduce un número de habitación.';
+                return;
+            }
+
+            resultadoDiv.className = '';
+            resultadoDiv.textContent = `Enviando solicitud para marcar Hab. ${numeroHabitacion} en Aseo...`;
+
+            try {
+                const respuesta = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ numero: numeroHabitacion })
+                });
+
+                const data = await respuesta.json();
+
+                if (!respuesta.ok) {
+                    // Si el servidor devuelve un error HTTP (4xx o 5xx)
+                    throw new Error(data.error || "Error desconocido en el servidor");
+                }
+                
+                // Éxito:
+                resultadoDiv.className = 'success';
+                resultadoDiv.innerHTML = `✅ ÉXITO en Habitación ${numeroHabitacion}: <strong>${data.mensaje}</strong>.`;
+                
+            } catch (err) {
+                // Fallo: error de conexión o error capturado por la respuesta
+                resultadoDiv.className = 'error';
+                resultadoDiv.textContent = `❌ ERROR: Fallo al llamar a la API: ${err.message}. Verifica que Flask esté activo.`;
+            }
+        }
+    </script>
+</body>
+</html>

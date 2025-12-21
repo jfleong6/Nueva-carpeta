@@ -60,6 +60,7 @@ def agregar_habitacion(datos):
     except Exception as e:
         print(f"[ERROR] al agregar habitación: {e}")
         return {"ok": False, "error": str(e)}
+
 def bloquear_habitacion(datos):
     """
     Registra un bloqueo. El Trigger en BD se encarga de cambiar el estado.
@@ -134,3 +135,127 @@ def desbloquear_habitacion(numero_habitacion, usuario_id=1):
     except Exception as e:
         print(f"[ERROR] al desbloquear habitación: {e}")
         return {"ok": False, "error": str(e)}
+    
+# En models/habitaciones.py (o donde manejes las consultas de habitaciones)
+
+def obtener_detalle_habitacion(numero_habitacion):
+    """
+    Obtiene todos los detalles de una habitación, incluyendo el historial de aseo.
+    """
+    try:      
+                
+        habitacion_id = numero_habitacion
+
+        # 2. Obtener datos básicos de la habitación
+        query_hab = """
+            SELECT 
+                h.numero, h.tipo, h.capacidad, h.precio_noche, 
+                h.cama, h.sencilla, h.camarote, h.estado, h.fecha_ultimo_aseo
+            FROM hotel.habitaciones h
+            WHERE h.id = %s
+        """
+        # La función consultar debe devolver un formato usable (lista de dicts o tuplas)
+        detalle_hab = conn.consultar(query_hab, (habitacion_id,))
+        
+        if not detalle_hab:
+            return {"ok": False, "error": "Error al obtener detalles"}
+
+        # 3. Obtener los últimos 5 registros de aseo
+        query_aseo = """
+            SELECT 
+                fecha_inicio, fecha_fin, duracion_minutos, observaciones, tipo_aseo, u.nombre
+            FROM hotel.aseo_historial ah
+            LEFT JOIN core.usuarios u ON ah.usuario_id = u.id
+            WHERE ah.habitacion_id = %s
+            ORDER BY fecha_inicio DESC
+            LIMIT 5;
+        """
+        historial_aseo = conn.consultar(query_aseo, (habitacion_id,))
+        
+        # 4. Combinar y devolver los datos
+        datos_combinados = {
+            "habitacion": detalle_hab[0], # Asumiendo que es una lista de un solo diccionario/registro
+            "historial_aseo": historial_aseo
+        }
+        
+        return {"ok": True, "data": datos_combinados}
+
+    except Exception as e:
+        print(f"[ERROR] al obtener detalle de habitación: {e}")
+        return {"ok": False, "error": str(e)}
+
+def marcar_disponible(id_hab, numero_habitacion, usuario):
+    try:
+        # 1. Obtener el ID de la habitación
+        habitacion_id = id_hab
+        print(type(habitacion_id))
+        
+        # 2. Actualizar el estado a '1' (Disponible)
+        # Esto dispara el Trigger de FIN DE ASEO
+        query_update = """
+            UPDATE hotel.habitaciones 
+            SET estado = '1'
+            WHERE id = %s AND estado = '3' -- Solo se actualiza si está en Limpieza
+            RETURNING id;
+        """
+        result = conn.ejecutar(query_update, (habitacion_id,))
+        
+        
+        if result == 0:
+            return {"ok": False, "mensaje": f"Habitación {numero_habitacion} no estaba en estado de limpieza (3) o no existe."}
+        conn.commit()
+        return {"ok": True, "mensaje": f"Habitación {numero_habitacion} marcada como disponible. Aseo auditado."}
+
+    except Exception as e:
+        print(f"[ERROR] al marcar disponible: {e}")
+        return {"ok": False, "mensaje": f"Error al procesar la disponibilidad: {str(e)}"}
+    finally:
+        if conn:
+            conn.cerrar()
+            
+
+def marcar_aseo(numero_habitacion, usuario_id):
+    try:
+        
+        if not conn.conectar():
+            raise Exception("Fallo la conexión a la base de datos.")
+            
+        # 1. Obtener el ID interno de la habitación (la API recibe el número)
+        query_id = "SELECT id FROM hotel.habitaciones WHERE numero = %s"
+        res_id = conn.consultar(query_id, (numero_habitacion,))
+        
+        if not res_id:
+            return {"ok": False, "mensaje": f"Habitación {numero_habitacion} no encontrada."}
+        
+        habitacion_id = res_id[0]['id'] 
+
+        # 2. Ejecutar el UPDATE que dispara el Trigger de INICIO DE ASEO
+        # Condición: El estado NO debe ser ya '3' (para evitar registros duplicados) 
+        # y NO debe ser '0' (Bloqueada), ya que un bloqueo tiene prioridad.
+        query_update = """
+            UPDATE hotel.habitaciones 
+            SET estado = '3'
+            WHERE id = %s 
+              AND estado IS DISTINCT FROM '3'
+              AND estado IS DISTINCT FROM '0'
+            RETURNING id;
+        """
+        result = conn.ejecutar(query_update, (habitacion_id,)) 
+        
+        if result == 0:
+            conn.rollback() 
+            return {"ok": False, "mensaje": f"Habitación {numero_habitacion} no pudo cambiar de estado (ya estaba en Limpieza o Bloqueada)."}
+
+        # 3. Guardar los cambios
+        conn.commit() 
+        
+        return {"ok": True, "mensaje": f"Habitación {numero_habitacion} marcada para limpieza. Historial iniciado."}
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print(f"[ERROR] al marcar aseo: {e}")
+        return {"ok": False, "mensaje": f"Error al procesar el cambio a aseo: {str(e)}"}
+    finally:
+        if conn:
+            conn.cerrar()

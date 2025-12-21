@@ -2,8 +2,10 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 class ConexionBase:
-    def __init__(self, host="localhost", user="", password="", database=""):
-        self.host = host
+    def __init__(self, host="", port="5432", user="", password="", database=""):
+        self.host = "localhost" if host == "" else "192.168.1.19"
+
+        self.port = port
         self.user = user
         self.password = password
         self.database = database
@@ -13,14 +15,20 @@ class ConexionBase:
     def conectar(self):
         try:
             self.conn = psycopg2.connect(
-                host=self.host,
-                user=self.user,
-                password=self.password,
-                database=self.database
+                host=self.host,              # Correcto
+                port=self.port,              # Correcto
+                user=self.user,              # Correcto
+                password=self.password,      # Correcto
+                database=self.database,      # Correcto
+                client_encoding='utf8'       # Opcional, pero aceptable
             )
             self.cursor = self.conn.cursor(cursor_factory=RealDictCursor)
+            return True # Retorna estado de éxito
         except Exception as e:
+            self.conn = None
+            self.cursor = None
             print(f"[ERROR] No se pudo conectar a PostgreSQL: {e}")
+            return False # Retorna estado de fallo
 
     def cerrar(self):
         if self.cursor:
@@ -42,9 +50,6 @@ class ConexionBase:
         finally:
             self.cerrar()
 
-    # En db/conexion_base.py, dentro de la clase ConexionBase
-
-# ... (tus métodos conectar, cerrar, consultar...) ...
 
     def insertar_informacion(self, tabla, datos):
         """
@@ -91,9 +96,6 @@ class ConexionBase:
         finally:
             self.cerrar()
 
-# En db/conexion_base.py, dentro de la clase ConexionBase
-
-# ... (tus métodos insertar_informacion, consultar, etc.) ...
 
     def actualizar_informacion(self, tabla, datos, condicion_where):
         """
@@ -158,3 +160,27 @@ class ConexionBase:
             return []
         finally:
             self.cerrar()
+
+    def ejecutar(self, query, params=None):
+            """Ejecuta consultas DML (UPDATE, INSERT, DELETE) y retorna el número de filas afectadas."""
+            if self.conn is None or self.cursor is None:
+                if not self.conectar():
+                    return 0 # Fallo al conectar
+            try:
+                self.cursor.execute(query, params)
+                return self.cursor.rowcount
+            except Exception as e:
+                print(f"[ERROR-EJECUTAR] {e}")
+                self.rollback()
+                raise # Lanzar la excepción para que la API la capture
+
+    def commit(self):
+        if self.conn:
+            self.conn.commit()
+
+    def rollback(self):
+        if self.conn:
+            self.conn.rollback()
+
+# conn = ConexionBase(user="postgres", password="jhonm320429", database="sistema")
+# conn.conectar()
